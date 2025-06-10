@@ -1,6 +1,6 @@
 import express from 'express'
 import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
+import { dirname } from 'path'
 import puppeteer from 'puppeteer'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -23,11 +23,28 @@ app.post('/generate', async (req, res) => {
     })
 
     const page = await browser.newPage()
+
+    // ✅ Устанавливаем точный размер экрана (viewport)
+    await page.setViewport({
+      width: 1000,
+      height: 1500
+    })
+
+    // ✅ Эмулируем реальный экран
+    await page.emulateMediaType('screen')
+
+    // Загружаем HTML
     await page.setContent(html, { waitUntil: 'networkidle0' })
-    const screenshot = await page.screenshot({ type: 'png' })
+
+    // ✅ Делаем скриншот точно по viewport
+    const screenshot = await page.screenshot({
+      type: 'png',
+      fullPage: false
+    })
 
     await browser.close()
 
+    // Возвращаем изображение
     res.set('Content-Type', 'image/png')
     res.send(screenshot)
   } catch (err) {
